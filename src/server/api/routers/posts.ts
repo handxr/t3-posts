@@ -84,6 +84,7 @@ export const postsRouter = createTRPCRouter({
     const cachedPosts = cache.get(POSTS_CACHE_KEY);
 
     if (cachedPosts) {
+      console.log("using cached posts");
       return cachedPosts as PostWithAuthor[];
     }
 
@@ -91,6 +92,7 @@ export const postsRouter = createTRPCRouter({
       const postsRes = await fetch(POSTS_API_URL);
       const posts = (await postsRes.json()) as PostResponse[];
       const postsWithAuthor = await Promise.all(posts.map(addAuthorDataToPost));
+      console.log("setting cache");
       cache.set(POSTS_CACHE_KEY, postsWithAuthor);
       return postsWithAuthor;
     } catch (error) {
@@ -109,6 +111,7 @@ export const postsRouter = createTRPCRouter({
       const cachedPost = cache.get(cacheKey);
 
       if (cachedPost) {
+        console.log("using cached post");
         return cachedPost as PostWithComments;
       }
 
@@ -119,7 +122,9 @@ export const postsRouter = createTRPCRouter({
         const postWithAuthor = await addAuthorDataToPost(post).then(
           addCommentsToPost
         );
+        console.log("setting cache");
         cache.set(cacheKey, postWithAuthor);
+
         return postWithAuthor;
       } catch (error) {
         throw new TRPCError({
