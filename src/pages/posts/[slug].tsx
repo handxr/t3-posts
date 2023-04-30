@@ -12,6 +12,14 @@ const PostPage = (
     id: props.id,
   });
 
+  const ctx = api.useContext();
+
+  const { mutate, isLoading: isPosting } = api.comments.create.useMutation({
+    onSuccess: async () => {
+      await ctx.posts.getPostById.invalidate({ id: props.id });
+    },
+  });
+
   if (isError)
     return <div>{error.message || "Something unexpected ocurred"}</div>;
 
@@ -33,6 +41,21 @@ const PostPage = (
       ) : (
         <p>No comments</p>
       )}
+      <input
+        type="text"
+        placeholder="Add comment"
+        className="w-full rounded-md border-2 border-gray-300 p-2"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            mutate({
+              body: e.currentTarget.value,
+              postId: props.id,
+            });
+            e.currentTarget.value = "";
+          }
+        }}
+        disabled={isPosting}
+      />
     </div>
   );
 };

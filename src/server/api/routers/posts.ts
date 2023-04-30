@@ -1,9 +1,14 @@
 import { z } from "zod";
 
 import { createTRPCRouter, publicProcedure } from "@/server/api/trpc";
-import { LRUCache } from "lru-cache";
 
 import { TRPCError } from "@trpc/server";
+import {
+  COMMENTS_API_URL,
+  POSTS_API_URL,
+  USERS_API_URL,
+} from "../utils/constants";
+import { cache } from "../lib/lru";
 
 type PostResponse = {
   userId: number;
@@ -35,15 +40,7 @@ type PostWithComments = PostWithAuthor & {
   comments: CommentResponse[];
 };
 
-const cache = new LRUCache({
-  max: 100,
-  ttl: 10 * 1000,
-});
-
-const POSTS_CACHE_KEY = "posts";
-const POSTS_API_URL = "https://jsonplaceholder.typicode.com/posts";
-const USERS_API_URL = "https://jsonplaceholder.typicode.com/users";
-const COMMENTS_API_URL = "https://jsonplaceholder.typicode.com/comments";
+export const POSTS_CACHE_KEY = "posts";
 
 const addAuthorDataToPost = async (
   post: PostResponse
