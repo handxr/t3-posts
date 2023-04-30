@@ -20,7 +20,7 @@ const Home: NextPage = () => {
         <link rel="icon" href="/favicon.ico" />
       </Head>
       <main>
-        {data?.length > 0 ? (
+        {data.length > 0 ? (
           <ul>
             {data.map((post) => (
               <li key={post.id}>

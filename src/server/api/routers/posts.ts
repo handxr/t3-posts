@@ -32,7 +32,7 @@ export const postsRouter = createTRPCRouter({
     const cachedPosts = cache.get(POSTS_CACHE_KEY);
 
     if (cachedPosts) {
-      return cachedPosts;
+      return cachedPosts as PostResponse[];
     }
 
     try {
