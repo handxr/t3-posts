@@ -4,6 +4,7 @@ import {
   type InferGetServerSidePropsType,
   type GetServerSidePropsContext,
 } from "next";
+import { toast } from "react-hot-toast";
 
 const PostPage = (
   props: InferGetServerSidePropsType<typeof getServerSideProps>
@@ -17,6 +18,10 @@ const PostPage = (
   const { mutate, isLoading: isPosting } = api.comments.create.useMutation({
     onSuccess: async () => {
       await ctx.posts.getPostById.invalidate({ id: props.id });
+      toast.success("Comment created");
+    },
+    onError: (err) => {
+      toast.error(err.message);
     },
   });
 

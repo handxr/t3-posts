@@ -1,5 +1,6 @@
 import { type AppType } from "next/app";
 import dynamic from "next/dynamic";
+import { Toaster } from "react-hot-toast";
 
 import { api } from "@/utils/api";
 
@@ -13,6 +14,7 @@ const MyApp: AppType = ({ Component, pageProps }) => {
   return (
     <>
       <ProgressBar />
+      <Toaster />
       <Component {...pageProps} />
     </>
   );
