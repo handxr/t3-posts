@@ -21,6 +21,18 @@ const PostPage = (
     <div>
       <h1>{data.title}</h1>
       <p>{data.author.name}</p>
+      {data.comments.length > 0 ? (
+        <div>
+          <h2>Comments</h2>
+          <ul>
+            {data.comments.map((comment) => (
+              <li key={comment.id}>{comment.body}</li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p>No comments</p>
+      )}
     </div>
   );
 };

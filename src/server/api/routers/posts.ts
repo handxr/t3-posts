@@ -19,6 +19,22 @@ type UserResponse = {
   email: string;
 };
 
+type CommentResponse = {
+  postId: number;
+  id: number;
+  name: string;
+  email: string;
+  body: string;
+};
+
+type PostWithAuthor = PostResponse & {
+  author: UserResponse;
+};
+
+type PostWithComments = PostWithAuthor & {
+  comments: CommentResponse[];
+};
+
 const cache = new LRUCache({
   max: 100,
   ttl: 10 * 1000,
@@ -26,20 +42,57 @@ const cache = new LRUCache({
 
 const POSTS_CACHE_KEY = "posts";
 const POSTS_API_URL = "https://jsonplaceholder.typicode.com/posts";
+const USERS_API_URL = "https://jsonplaceholder.typicode.com/users";
+const COMMENTS_API_URL = "https://jsonplaceholder.typicode.com/comments";
+
+const addAuthorDataToPost = async (
+  post: PostResponse
+): Promise<PostWithAuthor> => {
+  const users = await fetch(USERS_API_URL);
+  const usersData = (await users.json()) as UserResponse[];
+
+  const author = usersData.find((user) => user.id === post.userId);
+
+  if (!author) {
+    throw new Error("Author not found");
+  }
+
+  return Promise.resolve({
+    ...post,
+    author,
+  });
+};
+
+const addCommentsToPost = async (
+  post: PostWithAuthor
+): Promise<PostWithComments> => {
+  const comments = await fetch(COMMENTS_API_URL);
+  const commentsData = (await comments.json()) as CommentResponse[];
+
+  const postComments = commentsData.filter(
+    (comment) => comment.postId === post.id
+  );
+
+  return Promise.resolve({
+    ...post,
+    comments: postComments,
+  });
+};
 
 export const postsRouter = createTRPCRouter({
   getAll: publicProcedure.query(async () => {
     const cachedPosts = cache.get(POSTS_CACHE_KEY);
 
     if (cachedPosts) {
-      return cachedPosts as PostResponse[];
+      return cachedPosts as PostWithAuthor[];
     }
 
     try {
       const postsRes = await fetch(POSTS_API_URL);
       const posts = (await postsRes.json()) as PostResponse[];
-      cache.set(POSTS_CACHE_KEY, posts);
-      return posts;
+      const postsWithAuthor = await Promise.all(posts.map(addAuthorDataToPost));
+      cache.set(POSTS_CACHE_KEY, postsWithAuthor);
+      return postsWithAuthor;
     } catch (error) {
       console.error(error);
       throw new Error("Failed to fetch posts data");
@@ -56,32 +109,17 @@ export const postsRouter = createTRPCRouter({
       const cachedPost = cache.get(cacheKey);
 
       if (cachedPost) {
-        return cachedPost as PostResponse & {
-          author: UserResponse;
-        };
+        return cachedPost as PostWithComments;
       }
 
       try {
         const postRes = await fetch(`${POSTS_API_URL}/${input.id}`);
         const post = (await postRes.json()) as PostResponse;
 
-        const authorRes = await fetch(
-          `https://jsonplaceholder.typicode.com/users/${post.userId}`
+        const postWithAuthor = await addAuthorDataToPost(post).then(
+          addCommentsToPost
         );
-        const { id, name, username, email } =
-          (await authorRes.json()) as UserResponse;
-
-        const postWithAuthor = {
-          ...post,
-          author: {
-            id,
-            name,
-            username,
-            email,
-          },
-        };
         cache.set(cacheKey, postWithAuthor);
-
         return postWithAuthor;
       } catch (error) {
         throw new TRPCError({
