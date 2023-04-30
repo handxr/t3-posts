@@ -103,6 +103,28 @@ export const postsRouter = createTRPCRouter({
         id: z.string(),
       })
     )
+    .output(
+      z.object({
+        id: z.number(),
+        title: z.string(),
+        body: z.string(),
+        author: z.object({
+          id: z.number(),
+          name: z.string(),
+          username: z.string(),
+          email: z.string(),
+        }),
+        comments: z.array(
+          z.object({
+            postId: z.number(),
+            id: z.number(),
+            name: z.string(),
+            email: z.string(),
+            body: z.string(),
+          })
+        ),
+      })
+    )
     .query(async ({ input }) => {
       const cacheKey = input.id;
       const cachedPost = cache.get(cacheKey);
