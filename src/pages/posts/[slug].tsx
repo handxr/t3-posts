@@ -15,11 +15,12 @@ const PostPage = (
   if (isError)
     return <div>{error.message || "Something unexpected ocurred"}</div>;
 
-  if (!data?.id) return <div>Post doesnt exist</div>;
+  if (!data?.id) return <div>Post not found</div>;
 
   return (
     <div>
       <h1>{data.title}</h1>
+      <p>{data.author.name}</p>
     </div>
   );
 };
